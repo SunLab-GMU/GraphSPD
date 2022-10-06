@@ -18,7 +18,7 @@ With the increasing popularity of open-source software, embedded vulnerabilities
 
 We design a graph neural network based security patch detection system named **GraphSPD**, which represents patches as graphs with richer semantics and utilizes a patch-tailored graph model for detection. 
 
-More details about GraphSPD can be found in the paper "[GraphSPD: Graph-Based Security Patch Detection with Enriched Code Semantics]()", to appear in the 44th IEEE Symposium on Security and Privacy (IEEE S&P 2023), San Francisco, CA, May 22-26, 2023. 
+More details about GraphSPD can be found in the paper "[GraphSPD: Graph-Based Security Patch Detection with Enriched Code Semantics](https://csis.gmu.edu/ksun/publications/SP23_GraphSPD.pdf)", to appear in the 44th IEEE Symposium on Security and Privacy (IEEE S&P 2023), San Francisco, CA, May 22-26, 2023. 
 
 ## Download
 
@@ -63,7 +63,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 The `joern` library is based on [Jeorn](https://github.com/joernio/joern), which is also under the Apache License 2.0 (see `./jeorn/LICENSE` for more information).
-
 
 ## Other Resources
 
