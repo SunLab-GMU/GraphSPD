@@ -1,3 +1,3 @@
 # GraphSPD
 
-[Reserved] The source code will be uploaded before the S&P'23 conference.
+**[Reserved Repository]** The source code will be uploaded before the S&P'23 conference.
