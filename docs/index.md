@@ -81,4 +81,4 @@ The GraphSPD repo is built by [Sun Security Laboratory](https://sunlab-gmu.githu
 <br/>
 
 ---
-Last Updated Date: Aug, 2022
+Last Updated Date: Oct, 2022
