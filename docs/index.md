@@ -6,15 +6,8 @@ layout: default
 
 * [Description](#description)
 * [Download](#download)
-* [License](#license)
-* [Installation](#installation)
-  * [Install OS](#1-install-os)
-  * [Clone Source Code](#2-clone-source-code)
-  * [Install Dependencies](#3-install-dependencies)
-* [How-to-Run](#how-to-run)
-  * [Pre-processing](#1-pre-processing)
-  * [Generate PatchCPGs](#2-generate-patchcpgs)
-  * [Run PatchGNN](#3-run-patchgnn)
+  * [Disclaimer](#disclaimer)
+  * [License](#license)
 * [Other Resources](#other-resources)
 * [Team](#team)
 
@@ -53,7 +46,7 @@ or
 We developed GraphSPD and released the source code, aiming to help admins and developers identify silent security patches and prioritize their development.
 We hold no liability for any undesirable consequences of using the software package.
 
-## License
+### License
 
 Copyright 2022 SunLab-GMU
 
