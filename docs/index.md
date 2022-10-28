@@ -32,14 +32,14 @@ If you are using GraphSPD for work that will result in a publication (thesis, di
   booktitle={2023 IEEE Symposium on Security and Privacy (SP)}, 
   title={GraphSPD: Graph-Based Security Patch Detection with Enriched Code Semantics}, 
   year={2023},
-  pages={},
-  doi={}
+  pages={604-621},
+  doi = {10.1109/SP46215.2023.00035}
 }
 ```
 
 or
 
-*Shu Wang, Xinda Wang, Kun Sun, Sushil Jajodia, Haining Wang, and Qi Li, "GraphSPD: Graph-Based Security Patch Detection with Enriched Code Semantics," 2023 44th IEEE Symposium on Security and Privacy (S&P 2023), 2023.*
+*Shu Wang, Xinda Wang, Kun Sun, Sushil Jajodia, Haining Wang, and Qi Li, "GraphSPD: Graph-Based Security Patch Detection with Enriched Code Semantics," 2023 44th IEEE Symposium on Security and Privacy (S&P 2023), San Francisco, CA, US, 2023, pp. 604-621. doi: 10.1109/SP46215.2023.00035*
 
 ### Disclaimer
 
