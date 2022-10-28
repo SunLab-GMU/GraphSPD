@@ -33,7 +33,7 @@ If you are using GraphSPD for work that will result in a publication (thesis, di
   title={GraphSPD: Graph-Based Security Patch Detection with Enriched Code Semantics}, 
   year={2023},
   pages={604-621},
-  doi = {10.1109/SP46215.2023.00035}
+  doi={10.1109/SP46215.2023.00035}
 }
 ```
 
