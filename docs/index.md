@@ -67,7 +67,8 @@ The `joern` library is based on [Jeorn](https://github.com/joernio/joern), which
 ## Other Resources
 
 [1] [PatchDB: A Large-Scale Security Patch Dataset](https://sunlab-gmu.github.io/PatchDB/)\
-[2] [PatchRNN: A Deep Learning-Based System for Security Patch Identification](https://shuwang127.github.io/PatchRNN-demo/)
+[2] [PatchRNN: A Deep Learning-Based System for Security Patch Identification](https://shuwang127.github.io/PatchRNN-demo/)\
+[3] [Detecting "0-Day" Vulnerability: An Empirical Study of Secret Security Patch in OSS](https://par.nsf.gov/servlets/purl/10109780)
 
 ## Team
 
