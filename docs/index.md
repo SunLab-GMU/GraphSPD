@@ -25,7 +25,7 @@ With the increasing popularity of open-source software, embedded vulnerabilities
 
 We design a graph neural network based security patch detection system named **GraphSPD**, which represents patches as graphs with richer semantics and utilizes a patch-tailored graph model for detection. 
 
-More details about GraphSPD can be found in the paper "[GraphSPD: Graph-Based Security Patch Detection with Enriched Code Semantics]()", to appear in the 44th IEEE Symposium on Security and Privacy (IEEE S&P 2023), San Francisco, CA, May 22-26, 2023. 
+More details about GraphSPD can be found in the paper "[GraphSPD: Graph-Based Security Patch Detection with Enriched Code Semantics]()", appeared in the 44th IEEE Symposium on Security and Privacy (IEEE S&P 2023), San Francisco, CA, May 22-26, 2023. 
 
 ## Download
 
@@ -35,18 +35,22 @@ If you are using GraphSPD for work that will result in a publication (thesis, di
 
 ```bibtex
 @inproceedings{wang2022graphspd,
-  title={GraphSPD: Graph-Based Security Patch Detection with Enriched Code Semantics},
-  author={Wang, Shu and Wang, Xinda and Sun, Kun and Jajodia, Sushil and Wang, Haining and Li, Qi},
-  booktitle={2023 IEEE Symposium on Security and Privacy (SP)},
-  pages={604--621},
-  year={2022},
-  organization={IEEE Computer Society}
+  title = {GraphSPD: Graph-Based Security Patch Detection with Enriched Code Semantics},
+  author = {Shu Wang and Xinda Wang and Kun Sun and Sushil Jajodia and Haining Wang and Qi Li},
+  booktitle = {2023 IEEE Symposium on Security and Privacy (SP)},
+  year = {2023},
+  pages = {2409-2426},
+  doi = {10.1109/SP46215.2023.00035},
+  url = {https://doi.ieeecomputersociety.org/10.1109/SP46215.2023.00035},
+  publisher = {IEEE Computer Society},
+  address = {Los Alamitos, CA, USA},
+  month = {May}
 }
 ```
 
 or
 
-*Shu Wang, Xinda Wang, Kun Sun, Sushil Jajodia, Haining Wang, and Qi Li, "GraphSPD: Graph-Based Security Patch Detection with Enriched Code Semantics," 2023 44th IEEE Symposium on Security and Privacy (S&P 2023), 2023.*
+*Shu Wang, Xinda Wang, Kun Sun, Sushil Jajodia, Haining Wang, and Qi Li, "GraphSPD: Graph-Based Security Patch Detection with Enriched Code Semantics," 2023 44th IEEE Symposium on Security and Privacy (S&P), San Francisco, CA, US, 2023 pp. 2409-2426. doi: 10.1109/SP46215.2023.00035*
 
 ### Disclaimer
 
