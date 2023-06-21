@@ -1,0 +1,94 @@
+From fc785b12a0fea9ff3d014ad27f37ac73cbe056e8 Mon Sep 17 00:00:00 2001
+From: Maxim Dounin <mdounin@mdounin.ru>
+Date: Mon, 27 Oct 2014 21:13:39 +0300
+Subject: [PATCH] Cache: disable caching of responses with Vary (ticket #118).
+
+The "proxy_ignore_header" directive now undersands the "Vary" parameter
+to ignore the header as needed.
+---
+ src/http/ngx_http_upstream.c | 30 ++++++++++++++++++++++++++++++
+ src/http/ngx_http_upstream.h |  2 ++
+ 2 files changed, 32 insertions(+)
+
+diff --git a/src/http/ngx_http_upstream.c b/src/http/ngx_http_upstream.c
+index ca6db5cf1a..9a70b8c7ea 100644
+--- a/src/http/ngx_http_upstream.c
++++ b/src/http/ngx_http_upstream.c
+@@ -113,6 +113,8 @@ static ngx_int_t ngx_http_upstream_process_connection(ngx_http_request_t *r,
+ static ngx_int_t
+     ngx_http_upstream_process_transfer_encoding(ngx_http_request_t *r,
+     ngx_table_elt_t *h, ngx_uint_t offset);
++static ngx_int_t ngx_http_upstream_process_vary(ngx_http_request_t *r,
++    ngx_table_elt_t *h, ngx_uint_t offset);
+ static ngx_int_t ngx_http_upstream_copy_header_line(ngx_http_request_t *r,
+     ngx_table_elt_t *h, ngx_uint_t offset);
+ static ngx_int_t
+@@ -250,6 +252,10 @@ ngx_http_upstream_header_t  ngx_http_upstream_headers_in[] = {
+                  ngx_http_upstream_ignore_header_line, 0,
+                  ngx_http_upstream_ignore_header_line, 0, 0 },
+ 
++    { ngx_string("Vary"),
++                 ngx_http_upstream_process_vary, 0,
++                 ngx_http_upstream_copy_header_line, 0, 0 },
++
+     { ngx_string("X-Powered-By"),
+                  ngx_http_upstream_ignore_header_line, 0,
+                  ngx_http_upstream_copy_header_line, 0, 0 },
+@@ -407,6 +413,7 @@ ngx_conf_bitmask_t  ngx_http_upstream_ignore_headers_masks[] = {
+     { ngx_string("Expires"), NGX_HTTP_UPSTREAM_IGN_EXPIRES },
+     { ngx_string("Cache-Control"), NGX_HTTP_UPSTREAM_IGN_CACHE_CONTROL },
+     { ngx_string("Set-Cookie"), NGX_HTTP_UPSTREAM_IGN_SET_COOKIE },
++    { ngx_string("Vary"), NGX_HTTP_UPSTREAM_IGN_VARY },
+     { ngx_null_string, 0 }
+ };
+ 
+@@ -4138,6 +4145,29 @@ ngx_http_upstream_process_transfer_encoding(ngx_http_request_t *r,
+ }
+ 
+ 
++static ngx_int_t
++ngx_http_upstream_process_vary(ngx_http_request_t *r,
++    ngx_table_elt_t *h, ngx_uint_t offset)
++{
++    ngx_http_upstream_t  *u;
++
++    u = r->upstream;
++    u->headers_in.vary = h;
++
++#if (NGX_HTTP_CACHE)
++
++    if (u->conf->ignore_headers & NGX_HTTP_UPSTREAM_IGN_VARY) {
++        return NGX_OK;
++    }
++
++    u->cacheable = 0;
++
++#endif
++
++    return NGX_OK;
++}
++
++
+ static ngx_int_t
+ ngx_http_upstream_copy_header_line(ngx_http_request_t *r, ngx_table_elt_t *h,
+     ngx_uint_t offset)
+diff --git a/src/http/ngx_http_upstream.h b/src/http/ngx_http_upstream.h
+index 8296b2e1c7..b43322fc0c 100644
+--- a/src/http/ngx_http_upstream.h
++++ b/src/http/ngx_http_upstream.h
+@@ -50,6 +50,7 @@
+ #define NGX_HTTP_UPSTREAM_IGN_XA_LIMIT_RATE  0x00000040
+ #define NGX_HTTP_UPSTREAM_IGN_XA_BUFFERING   0x00000080
+ #define NGX_HTTP_UPSTREAM_IGN_XA_CHARSET     0x00000100
++#define NGX_HTTP_UPSTREAM_IGN_VARY           0x00000200
+ 
+ 
+ typedef struct {
+@@ -244,6 +245,7 @@ typedef struct {
+     ngx_table_elt_t                 *accept_ranges;
+     ngx_table_elt_t                 *www_authenticate;
+     ngx_table_elt_t                 *transfer_encoding;
++    ngx_table_elt_t                 *vary;
+ 
+ #if (NGX_HTTP_GZIP)
+     ngx_table_elt_t                 *content_encoding;

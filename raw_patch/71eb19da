@@ -1,0 +1,197 @@
+From 71eb19da43e3382ce97a14b6d3cd564881da37e7 Mon Sep 17 00:00:00 2001
+From: Maxim Dounin <mdounin@mdounin.ru>
+Date: Mon, 1 Mar 2021 20:00:43 +0300
+Subject: [PATCH] Improved maximum errno detection.
+
+Previously, systems without sys_nerr (or _sys_nerr) were handled with an
+assumption that errors start at 0 and continuous.  This is, however, not
+something POSIX requires, and not true on some platforms.
+
+Notably, on Linux, where sys_nerr is no longer available for newly linked
+binaries starting with glibc 2.32, there are gaps in error list, which
+used to stop us from properly detecting maximum errno.  Further, on
+GNU/Hurd errors start at 0x40000001.
+
+With this change, maximum errno detection is moved to the runtime code,
+now able to ignore gaps, and also detects the first error if needed.
+This fixes observed "Unknown error" messages as seen on Linux with
+glibc 2.32 and on GNU/Hurd.
+---
+ auto/unix               | 28 -------------
+ src/os/unix/ngx_errno.c | 91 ++++++++++++++++++++++++++++++++++++++---
+ 2 files changed, 85 insertions(+), 34 deletions(-)
+
+diff --git a/auto/unix b/auto/unix
+index ff9697a4ea..845e41fc6a 100644
+--- a/auto/unix
++++ b/auto/unix
+@@ -753,34 +753,6 @@ if [ $ngx_found = no ]; then
+ fi
+ 
+ 
+-if [ $ngx_found = no ]; then
+-
+-    # Solaris has no sys_nerr
+-    ngx_feature='maximum errno'
+-    ngx_feature_name=NGX_SYS_NERR
+-    ngx_feature_run=value
+-    ngx_feature_incs='#include <errno.h>
+-                      #include <string.h>
+-                      #include <stdio.h>'
+-    ngx_feature_path=
+-    ngx_feature_libs=
+-    ngx_feature_test='int  n;
+-                      char *p;
+-                      for (n = 1; n < 1000; n++) {
+-                          errno = 0;
+-                          p = strerror(n);
+-                          if (errno == EINVAL
+-                              || p == NULL
+-                              || strncmp(p, "Unknown error", 13) == 0)
+-                          {
+-                              break;
+-                          }
+-                      }
+-                      printf("%d", n);'
+-    . auto/feature
+-fi
+-
+-
+ ngx_feature="localtime_r()"
+ ngx_feature_name="NGX_HAVE_LOCALTIME_R"
+ ngx_feature_run=no
+diff --git a/src/os/unix/ngx_errno.c b/src/os/unix/ngx_errno.c
+index e787b2377e..b3303bf6f2 100644
+--- a/src/os/unix/ngx_errno.c
++++ b/src/os/unix/ngx_errno.c
+@@ -27,6 +27,8 @@
+ 
+ static ngx_str_t  *ngx_sys_errlist;
+ static ngx_str_t   ngx_unknown_error = ngx_string("Unknown error");
++static ngx_err_t   ngx_first_error;
++static ngx_err_t   ngx_last_error;
+ 
+ 
+ u_char *
+@@ -34,8 +36,13 @@ ngx_strerror(ngx_err_t err, u_char *errstr, size_t size)
+ {
+     ngx_str_t  *msg;
+ 
+-    msg = ((ngx_uint_t) err < NGX_SYS_NERR) ? &ngx_sys_errlist[err]:
+-                                              &ngx_unknown_error;
++    if (err >= ngx_first_error && err < ngx_last_error) {
++        msg = &ngx_sys_errlist[err - ngx_first_error];
++
++    } else {
++        msg = &ngx_unknown_error;
++    }
++
+     size = ngx_min(size, msg->len);
+ 
+     return ngx_cpymem(errstr, msg->data, size);
+@@ -50,20 +57,92 @@ ngx_strerror_init(void)
+     size_t      len;
+     ngx_err_t   err;
+ 
++#if (NGX_SYS_NERR)
++    ngx_first_error = 0;
++    ngx_last_error = NGX_SYS_NERR;
++
++#elif (EPERM > 1000 && EPERM < 0x7fffffff - 1000)
++
++    /*
++     * If number of errors is not known, and EPERM error code has large
++     * but reasonable value, guess possible error codes based on the error
++     * messages returned by strerror(), starting from EPERM.  Notably,
++     * this covers GNU/Hurd, where errors start at 0x40000001.
++     */
++
++    for (err = EPERM; err > EPERM - 1000; err--) {
++        ngx_set_errno(0);
++        msg = strerror(err);
++
++        if (errno == EINVAL
++            || msg == NULL
++            || strncmp(msg, "Unknown error", 13) == 0)
++        {
++            continue;
++        }
++
++        ngx_first_error = err;
++    }
++
++    for (err = EPERM; err < EPERM + 1000; err++) {
++        ngx_set_errno(0);
++        msg = strerror(err);
++
++        if (errno == EINVAL
++            || msg == NULL
++            || strncmp(msg, "Unknown error", 13) == 0)
++        {
++            continue;
++        }
++
++        ngx_last_error = err + 1;
++    }
++
++#else
++
++    /*
++     * If number of errors is not known, guess it based on the error
++     * messages returned by strerror().
++     */
++
++    ngx_first_error = 0;
++
++    for (err = 0; err < 1000; err++) {
++        ngx_set_errno(0);
++        msg = strerror(err);
++
++        if (errno == EINVAL
++            || msg == NULL
++            || strncmp(msg, "Unknown error", 13) == 0)
++        {
++            continue;
++        }
++
++        ngx_last_error = err + 1;
++    }
++
++#endif
++
+     /*
+      * ngx_strerror() is not ready to work at this stage, therefore,
+      * malloc() is used and possible errors are logged using strerror().
+      */
+ 
+-    len = NGX_SYS_NERR * sizeof(ngx_str_t);
++    len = (ngx_last_error - ngx_first_error) * sizeof(ngx_str_t);
+ 
+     ngx_sys_errlist = malloc(len);
+     if (ngx_sys_errlist == NULL) {
+         goto failed;
+     }
+ 
+-    for (err = 0; err < NGX_SYS_NERR; err++) {
++    for (err = ngx_first_error; err < ngx_last_error; err++) {
+         msg = strerror(err);
++
++        if (msg == NULL) {
++            ngx_sys_errlist[err - ngx_first_error] = ngx_unknown_error;
++            continue;
++        }
++
+         len = ngx_strlen(msg);
+ 
+         p = malloc(len);
+@@ -72,8 +151,8 @@ ngx_strerror_init(void)
+         }
+ 
+         ngx_memcpy(p, msg, len);
+-        ngx_sys_errlist[err].len = len;
+-        ngx_sys_errlist[err].data = p;
++        ngx_sys_errlist[err - ngx_first_error].len = len;
++        ngx_sys_errlist[err - ngx_first_error].data = p;
+     }
+ 
+     return NGX_OK;

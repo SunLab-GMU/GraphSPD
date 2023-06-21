@@ -1,0 +1,49 @@
+From 9a3ec202322b174acb5973d8f55cf570f1177149 Mon Sep 17 00:00:00 2001
+From: Maxim Dounin <mdounin@mdounin.ru>
+Date: Thu, 11 Feb 2021 21:52:11 +0300
+Subject: [PATCH] Additional connections reuse.
+
+If ngx_drain_connections() fails to immediately reuse any connections
+and there are no free connections, it now additionally tries to reuse
+a connection again.  This helps to provide at least one free connection
+in case of HTTP/2 with lingering close, where merely trying to reuse
+a connection once does not free it, but makes it reusable again,
+waiting for lingering close.
+---
+ src/core/ngx_connection.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/src/core/ngx_connection.c b/src/core/ngx_connection.c
+index c082d0dac0..8339e2bb7a 100644
+--- a/src/core/ngx_connection.c
++++ b/src/core/ngx_connection.c
+@@ -1310,6 +1310,7 @@ ngx_drain_connections(ngx_cycle_t *cycle)
+                       cycle->connection_n);
+     }
+ 
++    c = NULL;
+     n = ngx_max(ngx_min(32, cycle->reusable_connections_n / 8), 1);
+ 
+     for (i = 0; i < n; i++) {
+@@ -1326,6 +1327,21 @@ ngx_drain_connections(ngx_cycle_t *cycle)
+         c->close = 1;
+         c->read->handler(c->read);
+     }
++
++    if (cycle->free_connection_n == 0 && c && c->reusable) {
++
++        /*
++         * if no connections were freed, try to reuse the last
++         * connection again: this should free it as long as
++         * previous reuse moved it to lingering close
++         */
++
++        ngx_log_debug0(NGX_LOG_DEBUG_CORE, c->log, 0,
++                       "reusing connection again");
++
++        c->close = 1;
++        c->read->handler(c->read);
++    }
+ }
+ 
+ 

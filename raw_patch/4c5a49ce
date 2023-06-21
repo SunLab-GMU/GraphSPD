@@ -1,0 +1,125 @@
+From 4c5a49ce4c756cee85b27f9fe501f52adc7b9f1f Mon Sep 17 00:00:00 2001
+From: Maxim Dounin <mdounin@mdounin.ru>
+Date: Mon, 1 Mar 2021 20:00:45 +0300
+Subject: [PATCH] Introduced strerrordesc_np() support.
+
+The strerrordesc_np() function, introduced in glibc 2.32, provides an
+async-signal-safe way to obtain error messages.  This makes it possible
+to avoid copying error messages.
+---
+ auto/unix               | 28 +++++++++++++++++++------
+ src/os/unix/ngx_errno.c | 46 ++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 67 insertions(+), 7 deletions(-)
+
+diff --git a/auto/unix b/auto/unix
+index 845e41fc6a..9c402e7872 100644
+--- a/auto/unix
++++ b/auto/unix
+@@ -727,17 +727,33 @@ ngx_feature_test="char buf[1]; struct iovec vec[1]; ssize_t n;
+ . auto/feature
+ 
+ 
+-ngx_feature="sys_nerr"
+-ngx_feature_name="NGX_SYS_NERR"
+-ngx_feature_run=value
+-ngx_feature_incs='#include <errno.h>
+-                  #include <stdio.h>'
++# strerrordesc_np(), introduced in glibc 2.32
++
++ngx_feature="strerrordesc_np()"
++ngx_feature_name="NGX_HAVE_STRERRORDESC_NP"
++ngx_feature_run=no
++ngx_feature_incs='#include <string.h>'
+ ngx_feature_path=
+ ngx_feature_libs=
+-ngx_feature_test='printf("%d", sys_nerr);'
++ngx_feature_test="char *p; p = strerrordesc_np(0);
++                  if (p == NULL) return 1"
+ . auto/feature
+ 
+ 
++if [ $ngx_found = no ]; then
++
++    ngx_feature="sys_nerr"
++    ngx_feature_name="NGX_SYS_NERR"
++    ngx_feature_run=value
++    ngx_feature_incs='#include <errno.h>
++                      #include <stdio.h>'
++    ngx_feature_path=
++    ngx_feature_libs=
++    ngx_feature_test='printf("%d", sys_nerr);'
++    . auto/feature
++fi
++
++
+ if [ $ngx_found = no ]; then
+ 
+     # Cygiwn defines _sys_nerr
+diff --git a/src/os/unix/ngx_errno.c b/src/os/unix/ngx_errno.c
+index b3303bf6f2..ca23b2d3f2 100644
+--- a/src/os/unix/ngx_errno.c
++++ b/src/os/unix/ngx_errno.c
+@@ -9,6 +9,49 @@
+ #include <ngx_core.h>
+ 
+ 
++static ngx_str_t   ngx_unknown_error = ngx_string("Unknown error");
++
++
++#if (NGX_HAVE_STRERRORDESC_NP)
++
++/*
++ * The strerrordesc_np() function, introduced in glibc 2.32, is
++ * async-signal-safe.  This makes it possible to use it directly,
++ * without copying error messages.
++ */
++
++
++u_char *
++ngx_strerror(ngx_err_t err, u_char *errstr, size_t size)
++{
++    size_t       len;
++    const char  *msg;
++
++    msg = strerrordesc_np(err);
++
++    if (msg == NULL) {
++        msg = (char *) ngx_unknown_error.data;
++        len = ngx_unknown_error.len;
++
++    } else {
++        len = ngx_strlen(msg);
++    }
++
++    size = ngx_min(size, len);
++
++    return ngx_cpymem(errstr, msg, size);
++}
++
++
++ngx_int_t
++ngx_strerror_init(void)
++{
++    return NGX_OK;
++}
++
++
++#else
++
+ /*
+  * The strerror() messages are copied because:
+  *
+@@ -26,7 +69,6 @@
+ 
+ 
+ static ngx_str_t  *ngx_sys_errlist;
+-static ngx_str_t   ngx_unknown_error = ngx_string("Unknown error");
+ static ngx_err_t   ngx_first_error;
+ static ngx_err_t   ngx_last_error;
+ 
+@@ -164,3 +206,5 @@ ngx_strerror_init(void)
+ 
+     return NGX_ERROR;
+ }
++
++#endif

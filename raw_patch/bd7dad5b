@@ -1,0 +1,32 @@
+From bd7dad5b0eb9f667a9c66ea5175a017ac51cd027 Mon Sep 17 00:00:00 2001
+From: Maxim Dounin <mdounin@mdounin.ru>
+Date: Thu, 6 Aug 2020 05:02:22 +0300
+Subject: [PATCH] Added size check to ngx_http_alloc_large_header_buffer().
+
+This ensures that copying won't write more than the buffer size
+even if the buffer comes from hc->free and it is smaller than the large
+client header buffer size in the virtual host configuration.  This might
+happen if size of large client header buffers is different in name-based
+virtual hosts, similarly to the problem with number of buffers fixed
+in 6926:e662cbf1b932.
+---
+ src/http/ngx_http_request.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/src/http/ngx_http_request.c b/src/http/ngx_http_request.c
+index 6feb6cc31c..257c4064b3 100644
+--- a/src/http/ngx_http_request.c
++++ b/src/http/ngx_http_request.c
+@@ -1647,6 +1647,12 @@ ngx_http_alloc_large_header_buffer(ngx_http_request_t *r,
+     ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
+                    "http large header copy: %uz", r->header_in->pos - old);
+ 
++    if (r->header_in->pos - old > b->end - b->start) {
++        ngx_log_error(NGX_LOG_ALERT, r->connection->log, 0,
++                      "too large header to copy");
++        return NGX_ERROR;
++    }
++
+     new = b->start;
+ 
+     ngx_memcpy(new, old, r->header_in->pos - old);

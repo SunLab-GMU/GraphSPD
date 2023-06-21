@@ -1,0 +1,26 @@
+From 56f53316837271a8cbb1d99f638e28d268a00d45 Mon Sep 17 00:00:00 2001
+From: Sergey Kandaurov <pluknet@nginx.com>
+Date: Tue, 26 Jan 2021 12:39:28 +0300
+Subject: [PATCH] Clean up trailers in ngx_http_clean_header() as well.
+
+The function has not been updated with introduction of trailers support
+in 7034:1b068a4e82d8 (1.13.2).
+---
+ src/http/ngx_http_special_response.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/http/ngx_http_special_response.c b/src/http/ngx_http_special_response.c
+index 76e6705889..72f56fd9ad 100644
+--- a/src/http/ngx_http_special_response.c
++++ b/src/http/ngx_http_special_response.c
+@@ -575,6 +575,10 @@ ngx_http_clean_header(ngx_http_request_t *r)
+     r->headers_out.headers.part.next = NULL;
+     r->headers_out.headers.last = &r->headers_out.headers.part;
+ 
++    r->headers_out.trailers.part.nelts = 0;
++    r->headers_out.trailers.part.next = NULL;
++    r->headers_out.trailers.last = &r->headers_out.trailers.part;
++
+     r->headers_out.content_length_n = -1;
+     r->headers_out.last_modified_time = -1;
+ }
