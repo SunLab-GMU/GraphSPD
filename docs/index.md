@@ -34,13 +34,13 @@ You can download the source code of GraphSPD via GitHub: [https://github.com/Sun
 If you are using GraphSPD for work that will result in a publication (thesis, dissertation, paper, article), please use the following citation.
 
 ```bibtex
-@INPROCEEDINGS{GraphSPD23Wang,
+@inproceedings{wang2022graphspd,
+  title={GraphSPD: Graph-Based Security Patch Detection with Enriched Code Semantics},
   author={Wang, Shu and Wang, Xinda and Sun, Kun and Jajodia, Sushil and Wang, Haining and Li, Qi},
-  booktitle={2023 IEEE Symposium on Security and Privacy (SP)}, 
-  title={GraphSPD: Graph-Based Security Patch Detection with Enriched Code Semantics}, 
-  year={2023},
-  pages={},
-  doi={}
+  booktitle={2023 IEEE Symposium on Security and Privacy (SP)},
+  pages={604--621},
+  year={2022},
+  organization={IEEE Computer Society}
 }
 ```
 
