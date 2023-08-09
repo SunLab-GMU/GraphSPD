@@ -25,7 +25,7 @@ With the increasing popularity of open-source software, embedded vulnerabilities
 
 We design a graph neural network based security patch detection system named **GraphSPD**, which represents patches as graphs with richer semantics and utilizes a patch-tailored graph model for detection. 
 
-More details about GraphSPD can be found in the paper "[GraphSPD: Graph-Based Security Patch Detection with Enriched Code Semantics]()", appeared in the 44th IEEE Symposium on Security and Privacy (IEEE S&P 2023), San Francisco, CA, May 22-26, 2023. 
+More details about GraphSPD can be found in the paper "[GraphSPD: Graph-Based Security Patch Detection with Enriched Code Semantics](https://csis.gmu.edu/ksun/publications/SP23_GraphSPD.pdf)", appeared in the 44th IEEE Symposium on Security and Privacy (IEEE S&P 2023), San Francisco, CA, May 22-26, 2023. 
 
 ## Download
 
